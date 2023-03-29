@@ -9,44 +9,37 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 export default function Exam_letter({ onOK,text }) {
 
   const ref = useRef();
-   state = {
-    uploading: false,
-    image:'',
-  }
 
 
- 
+
+   function DataURIToBlob(dataURI: string) {
+      const splitDataURI = dataURI.split(',')
+      const byteString = splitDataURI[0].indexOf('base64') >= 0 ? atob(splitDataURI[1]) : decodeURI(splitDataURI[1])
+      const mimeString = splitDataURI[0].split(':')[1].split(';')[0]
+      const ia = new Uint8Array(byteString.length)
+      for (let i = 0; i < byteString.length; i++)
+          ia[i] = byteString.charCodeAt(i)
+       return new Blob([ia], { type: mimeString })
+   }
 
 
   const handleOK = async (signature) => {
-    const path = FileSystem.documentDirectory + "sign.png"; 
-    FileSystem.writeAsStringAsync(
-    path,
-    signature.replace("data:image/png;base64,", ""),
-    { encoding: FileSystem.EncodingType.Base64 }
-  )
-    .then(() => uploadImageAsync(path))
-    .then(console.log(path),res => res.json())
+    uploadImageAsync(signature)
+    .then(res => res.json())
     .catch(console.error);    //onOK(signature);
-    
 }
 
-const uploadImageAsync =  (uri) => {
-    
-  let apiUrl = '/classify';
+const uploadImageAsync =  (signature) => {
+  let apiUrl = 'http://localhost:19006/classify';
+  const file = DataURIToBlob(signature)
 
   let formData = new FormData();
-  formData.append('photo', {
-    uri,
-    name: `photo.png`,
-    type: `image/png`,
-  });
-
+  formData.append('photo', file,`photo.png`);
+  
   let options = {
     method: 'POST',
     body: formData,
     headers: {
-     
       'Content-Type': 'multipart/form-data',
     },
   };
