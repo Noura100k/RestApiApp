@@ -6,16 +6,28 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "start:server-dev": "concurrently \"npm start\" \"cross-env FLASK_ENV=development FLASK_APP=../backend/app.py flask run\"",
+    "start:server-prod": "rm -rf ../backend/templates && rm -rf ../backend/static && npm run build && cross-env FLASK_ENV=production FLASK_APP=../backend/app.py flask run",
+    "build": "react-scripts build && mv build ../backend && mv ../backend/build/static ../backend && mv ../backend/build ../backend/templates",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "dependencies": {
+    "@expo/webpack-config": "^18.0.1",
     "expo": "~48.0.9",
+    "expo-file-system": "^15.2.2",
     "expo-status-bar": "~1.4.4",
     "react": "18.2.0",
-    "react-native": "0.71.4"
+    "react-dom": "18.2.0",
+    "react-native": "0.71.4",
+    "react-native-signature-canvas": "^4.5.0",
+    "react-native-web": "~0.18.10"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "concurrently": "^7.6.0",
+    "cross-env": "^7.0.3"
   },
   "private": true
 }
