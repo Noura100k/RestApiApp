@@ -1,20 +1,12 @@
-import { StatusBar } from "expo-status-bar";
+import { decode as atob } from "base-64";
 import React, { useRef, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Button,
-  TouchableOpacity,
-  Text,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import SignatureScreen from "react-native-signature-canvas";
-import * as FileSystem from "expo-file-system";
 import Ionicons from "react-native-vector-icons/Ionicons";
-
-export default function Exam_letter({ onOK, text }) {
+import { ActivityIndicator } from "react-native";
+export default function Exam_letter({ text }) {
   const ref = useRef();
-
+  const [loading, setLoading] = useState(false);
   function DataURIToBlob(dataURI) {
     const splitDataURI = dataURI.split(",");
     const byteString =
@@ -29,15 +21,33 @@ export default function Exam_letter({ onOK, text }) {
   }
 
   const handleOK = async (signature) => {
-    uploadImageAsync(signature)
-      .then((res) => res.json())
-      .catch(console.error); //onOK(signature);
+    // start loading
+    setLoading(true);
+    // upload image to server
+    await uploadImageAsync(signature)
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    // stop loading
+    setLoading(false);
   };
 
-  const uploadImageAsync = (signature) => {
-    let apiUrl = "http://localhost:19006/classify";
-    const file = DataURIToBlob(signature);
+  const uploadImageAsync = async (signature) => {
+    /**
+     * how to get your laptop IP:
+     * 1. open cmd
+     * 2. type "ipconfig"
+     * 3. find "IPv4 Address" and copy it
+     * 4. paste it in the url above
+     * 5. replace "<YourLaptopIP>"" with your IP
+     * example: http://192.168.100.5:19006/classify
+     */
+    let apiUrl = "http://<YourLaptopIP>:19006/classify";
 
+    const file = DataURIToBlob(signature);
     let formData = new FormData();
     formData.append("photo", file, `photo.png`);
 
@@ -45,6 +55,7 @@ export default function Exam_letter({ onOK, text }) {
       method: "POST",
       body: formData,
       headers: {
+        Accept: "application/json",
         "Content-Type": "multipart/form-data",
       },
     };
@@ -53,7 +64,6 @@ export default function Exam_letter({ onOK, text }) {
 
   //assign signature to ref
   const handleConfirm = () => {
-    console.log("end");
     ref.current.readSignature();
   };
 
@@ -67,15 +77,19 @@ export default function Exam_letter({ onOK, text }) {
   return (
     <View style={styles.container}>
       <View style={{ width: imgWidth, height: imgHeight }}>
-        <SignatureScreen
-          ref={ref}
-          bgSrc="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFq-uwQ1be8k03yZTxhVhyA5XtwoSI-rBMDQ&usqp=CAU"
-          bgWidth={imgWidth}
-          bgHeight={imgHeight}
-          webStyle={style}
-          onOK={handleOK}
-          onEmpty={() => console.log("empty")}
-        />
+        {loading ? (
+          <ActivityIndicator />
+        ) : (
+          <SignatureScreen
+            ref={ref}
+            bgSrc="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFq-uwQ1be8k03yZTxhVhyA5XtwoSI-rBMDQ&usqp=CAU"
+            bgWidth={imgWidth}
+            bgHeight={imgHeight}
+            webStyle={style}
+            onOK={handleOK}
+            onEmpty={() => console.log("empty")}
+          />
+        )}
       </View>
       <View style={styles.row}>
         <TouchableOpacity onPress={handleConfirm}>
